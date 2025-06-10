@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using CentraliaStore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CentraliaStore
 {
@@ -23,7 +25,8 @@ namespace CentraliaStore
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<StoreContext>();
             builder.Services.AddControllersWithViews();
-            
+            builder.Services.AddSingleton<IAuthorizationHandler, ApiKeyAuthorizationHandler>();
+
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())

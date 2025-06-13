@@ -205,49 +205,53 @@ namespace CentraliaStore.Controllers
 
 
         // GET: ApiKeys/Delete/5
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Delete(int? id)
         {
-            
+
             if (id == null)
                 return NotFound();
 
-            var apiKey = await _context.ApiKeys.Include(k => k.AppUser).FirstOrDefaultAsync(k => k.ApiKeyId == id);
-            if (apiKey == null)
-                return NotFound();
-
-            var authorizationResult = await _authorizationService.AuthorizeAsync(User, apiKey, Operations.Delete);
-            if (!authorizationResult.Succeeded)
+            
+            if (!User.IsInRole("Administrator"))
             {
                 if (User.Identity.IsAuthenticated)
-                    return Forbid();
+                    return Forbid();   
                 else
-                    return Challenge();
+                    return Challenge(); 
             }
+
+            var apiKey = await _context.ApiKeys
+                .Include(k => k.AppUser)
+                .FirstOrDefaultAsync(k => k.ApiKeyId == id);
+
+            if (apiKey == null)
+                return NotFound();
 
             return View(apiKey);
         }
 
         // POST: ApiKeys/Delete/5
+        [Authorize(Roles = "Administrator")]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            
+            if (!User.IsInRole("Administrator"))
+            {
+                if (User.Identity.IsAuthenticated)
+                    return Forbid();    
+                else
+                    return Challenge(); 
+            }
+
             var apiKey = await _context.ApiKeys.FindAsync(id);
             if (apiKey == null)
                 return NotFound();
 
-            var authorizationResult = await _authorizationService.AuthorizeAsync(User, apiKey, Operations.Delete);
-            if (!authorizationResult.Succeeded)
-            {
-                if (User.Identity.IsAuthenticated)
-                    return Forbid();
-                else
-                    return Challenge();
-            }
-
             _context.ApiKeys.Remove(apiKey);
             await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 
